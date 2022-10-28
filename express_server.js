@@ -10,11 +10,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//function to create a random 6-digit-character short URL name 
 const generateRandomString = () => {
   let result             = '';
   const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
-  for ( const i = 0; i < 6; i++ ) {
+  for ( let i = 0; i < 6; i++ ) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
@@ -34,8 +35,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString()
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect('/urls/' + shortURL); 
 });
 
 app.get("/urls/:id", (req, res) => {
