@@ -7,10 +7,16 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+////////////////////////////////
+// setup all database objects //
+///////////////////////////////
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {};
 
 //function to create a random 6-digit-character short URL name 
 const generateRandomString = () => {
@@ -36,6 +42,30 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { username: req.cookies["username"]};
   res.render("urls_new", templateVars);
 });
+
+///////////////////////////////
+// set up the regeister page //
+///////////////////////////////
+
+app.get("/register", (req, res) => {
+  const templateVars = { username: req.cookies["username"]};
+  res.render("register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const userId = generateRandomString();
+  console.log(req.body.email);
+  users[userId] = {
+    id:       userId,
+    email:    req.body.email,
+    password: req.body.password
+  }
+  console.log(users);
+  res.cookie('user_id', userId);
+  res.redirect('/urls/'); 
+});
+
+//////////////////////////
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
