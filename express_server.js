@@ -58,8 +58,12 @@ app.get("/urls/new", (req, res) => {
 ///////////////////////////////
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
-  res.render("register", templateVars);
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls');
+  } else {
+    const templateVars = { user: users[req.cookies["user_id"]] };
+    res.render("register", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -85,8 +89,12 @@ app.post("/register", (req, res) => {
 ///////////////////////////
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
-  res.render("login", templateVars);
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls');
+  } else {
+    const templateVars = { user: users[req.cookies["user_id"]] };
+    res.render("login", templateVars);
+  }
 });
 
 app.post("/login", (req, res) => {
