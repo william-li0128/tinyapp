@@ -23,28 +23,29 @@
 
     <main style="margin: 1em;">
       <h3>Login</h3>
-      <form class="form-inline" action="/login" method="POST">
+      <form action="/register" method="POST">
         <div class="form-group mb-2">
-          <label for="email">Email:</label>
+          <label for="email"><strong>Email Address</strong></label><br>
           <input
             class="form-control"
             type="email"
             name="email"
-            placeholder="example@gmail.com"
-            style="width: 300px; margin: 1em"
-          />
-          <label for="email">Password:</label>
+            placeholder="Enter email"
+            style="width: 300px"
+          /><br>
+          <label for="email"><strong>Password</strong></label><br>
           <input
             class="form-control"
             type="password"
             name="password"
-            placeholder="example123"
-            style="width: 300px; margin: 1em"
-          />
-          <button type="submit" class="btn btn-primary">Submit</button>
+            placeholder="Password"
+            style="width: 300px"
+          /><br>
+          <button type="submit" class="btn btn-primary">Login</button>
         </div>
       </form>
     </main>
+
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
