@@ -39,6 +39,16 @@ const getUserByEmail = (email) => {
   return null;
 };
 
+// function to check whether a shortened url exists
+const checkShortenedURL = (shortenedURL) => {
+  for (const key in urlDatabase) {
+    if (shortenedURL === key) {
+      return true;
+    } 
+  }
+  return false;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -72,9 +82,9 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   if (req.body.email === '') {
-    res.status(400).send('email is invalidate');
+    res.status(400).send('email is invalid');
   } else if (req.body.password === '') {
-    res.status(400).send('password is invalidate');
+    res.status(400).send('password is invalid');
   } else if (getUserByEmail(req.body.email)) {
     res.status(400).send('account already registered');
   } else {
@@ -140,8 +150,13 @@ app.get("/hello", (req, res) => {
 
 //redirect the shortURL to the appropriate longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  const shortURL = req.params.id
+  if (checkShortenedURL(shortURL)) {
+    const longURL = urlDatabase[shortURL];
+    res.redirect(longURL);
+  }else {
+    res.status(403).send('Invalid shortened URL');
+  }
 });
 
 //implement a DELETE operation and redirect to the urls_index page afterwards
