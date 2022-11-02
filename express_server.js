@@ -49,8 +49,12 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
-  res.render("urls_new", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.redirect('/login');
+  } else {
+    const templateVars = { user: users[req.cookies["user_id"]] };
+    res.render("urls_new", templateVars);
+  }
 });
 
 ///////////////////////////////
@@ -111,9 +115,13 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect('/urls/' + shortURL); 
+  if (!req.cookies["user_id"]) {
+    res.status(403).send('Please login before using the tiny APP.');
+  } else {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = req.body.longURL;
+    res.redirect('/urls/' + shortURL); 
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
