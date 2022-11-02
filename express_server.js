@@ -44,6 +44,18 @@ const checkShortenedURL = (shortenedURL) => {
     } 
   }
   return false;
+};
+
+/* returns the URLs where the userID is equal 
+to the id of the currently logged-in user. */
+const urlsForUser = (id) => {
+  const userUrlDatabase = {};
+  for (const key in urlDatabase) {
+    if (id === urlDatabase[key].userId) {
+      userUrlDatabase[key] = urlDatabase[key];
+    } 
+  }
+  return userUrlDatabase;
 }
 
 app.get("/", (req, res) => {
@@ -51,8 +63,12 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase , user: users[req.cookies["user_id"]] };
-  res.render("urls_index", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.status(403).send('Please login before viewing URLs.');
+  } else {
+    const templateVars = { urls: urlsForUser(req.cookies["user_id"]) , user: users[req.cookies["user_id"]] };
+    res.render("urls_index", templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -136,8 +152,14 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: users[req.cookies["user_id"]]};
-  res.render("urls_show", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.status(403).send('Please login before viewing the shorten url page.');
+  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+    res.status(403).send('Sorry! You don\' own this url.');
+  } else {
+    const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: users[req.cookies["user_id"]]};
+    res.render("urls_show", templateVars);
+  }
 });
 
 app.get("/urls.json", (req, res) => {
