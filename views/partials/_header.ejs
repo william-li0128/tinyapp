@@ -14,28 +14,24 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <a class="nav-item nav-link align-right" href="/urls">My URLs</a>
+        <a class="nav-item nav-link align-right" href="/urls/new">Create New URL</a>
       </div>
     </div>
 
     <% if(!user){ %>
-      <form class="form-inline justify-content-center" action="/login" method="POST">
-        <div class="form-group mb-2">
-          <input
-            class="form-control"
-            type="text"
-            name="username"
-            placeholder="Username"
-            style="width: 300px; margin: 1em"
-          />
-          <button type="login" class="btn btn-outline-dark">Login</button>
+      <form>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="/login">Login</a>
+            <a class="nav-item nav-link" href="/register">Register</a>
+          </div>
         </div>
-      </form> <!-- login button to store a name cookie  -->  
+      </form>
     <% } else{ %>  
       <form class="form-inline" action="/logout" method="POST">
         <div class="form-group mb-2">
-          <label> <font size="+1"> Logged in as: <%= user.email %> </font> </label>
+          <label> <strong> Logged in as: <%= user.email %> </strong> </label>
           <button style="margin-left:5px" type="logout" class="btn btn-outline-dark">Logout</button>
         </div>
       </form>
