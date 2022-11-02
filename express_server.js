@@ -11,10 +11,7 @@ app.use(cookieParser());
 // setup all database objects //
 ///////////////////////////////
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
 
 const users = {};
 
@@ -129,14 +126,17 @@ app.post("/urls", (req, res) => {
     res.status(403).send('Please login before using the tiny APP.');
   } else {
     const shortURL = generateRandomString();
-    urlDatabase[shortURL] = req.body.longURL;
-    res.redirect('/urls/' + shortURL); 
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userId: req.cookies["user_id"]
+    };
+    res.redirect(`/urls/${shortURL}`); 
   }
 });
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const templateVars = { id: id, longURL: urlDatabase[id], user: users[req.cookies["user_id"]]};
+  const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: users[req.cookies["user_id"]]};
   res.render("urls_show", templateVars);
 });
 
@@ -152,7 +152,7 @@ app.get("/hello", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id
   if (checkShortenedURL(shortURL)) {
-    const longURL = urlDatabase[shortURL];
+    const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   }else {
     res.status(403).send('Invalid shortened URL');
@@ -169,7 +169,7 @@ app.post("/urls/:id/delete", (req, res) => {
 //implement an EDIT operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id].longURL = req.body.longURL;
   res.redirect('/urls'); 
 });
 
