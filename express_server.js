@@ -81,7 +81,14 @@ app.post("/register", (req, res) => {
   }
 });
 
-//////////////////////////
+///////////////////////////
+// set up the login page //
+///////////////////////////
+
+app.get("/login", (req, res) => {
+  const templateVars = { user: users[req.cookies["user_id"]] };
+  res.render("login", templateVars);
+});
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
