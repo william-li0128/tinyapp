@@ -29,6 +29,16 @@ const generateRandomString = () => {
   return result;
 };
 
+// function to finding a user object from its email
+const getUserByEmail = (email) => {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return users[user];
+    } 
+  }
+  return null;
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -53,14 +63,22 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userId = generateRandomString();
-  users[userId] = {
-    id:       userId,
-    email:    req.body.email,
-    password: req.body.password
+  if (req.body.email === '') {
+    res.status(400).send('email is invalidate');
+  } else if (req.body.password === '') {
+    res.status(400).send('password is invalidate');
+  } else if (getUserByEmail(req.body.email)) {
+    res.status(400).send('account already registered');
+  } else {
+    const userId = generateRandomString();
+    users[userId] = {
+      id:       userId,
+      email:    req.body.email,
+      password: req.body.password
+    }
+    res.cookie('user_id', userId);
+    res.redirect('/urls/'); 
   }
-  res.cookie('user_id', userId);
-  res.redirect('/urls/'); 
 });
 
 //////////////////////////
