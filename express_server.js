@@ -154,6 +154,8 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   if (!req.cookies["user_id"]) {
     res.status(403).send('Please login before viewing the shorten url page.');
+  } else if (!checkShortenedURL(id)) {
+    res.status(403).send('Invalid shorten url');
   } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
@@ -184,15 +186,31 @@ app.get("/u/:id", (req, res) => {
 //implement a DELETE operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect('/urls'); 
+  if (!req.cookies["user_id"]) {
+    res.status(403).send('Please login before deleting the shorten url page.');
+  } else if (!checkShortenedURL(id)) {
+    res.status(403).send('Invalid shorten url');
+  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+    res.status(403).send('Sorry! You don\' own this url.');
+  } else {
+    delete urlDatabase[id];
+    res.redirect('/urls'); 
+  }
 });
 
 //implement an EDIT operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
-  urlDatabase[id].longURL = req.body.longURL;
-  res.redirect('/urls'); 
+  if (!req.cookies["user_id"]) {
+    res.status(403).send('Please login before editing the shorten url page.');
+  } else if (!checkShortenedURL(id)) {
+    res.status(403).send('Invalid shorten url');
+  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+    res.status(403).send('Sorry! You don\' own this url.');
+  } else {
+    urlDatabase[id].longURL = req.body.longURL;
+    res.redirect('/urls'); 
+  }
 });
 
 //clear the cookie after receiving a logout commend
