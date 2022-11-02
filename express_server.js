@@ -76,8 +76,7 @@ app.post("/register", (req, res) => {
       email:    req.body.email,
       password: req.body.password
     }
-    res.cookie('user_id', userId);
-    res.redirect('/urls/'); 
+    res.redirect('/login'); 
   }
 });
 
@@ -88,6 +87,19 @@ app.post("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  if (!getUserByEmail(req.body.email)) {
+    res.status(403).send('e-mail cannot be found');
+  } else {
+    if (req.body.password !== getUserByEmail(req.body.email).password){
+      res.status(403).send('password does not match');
+    } else {
+      res.cookie('user_id', getUserByEmail(req.body.email).id);
+      res.redirect('/urls'); 
+    }
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -120,20 +132,20 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
-  res.redirect('/urls/'); 
+  res.redirect('/urls'); 
 });
 
 //implement an EDIT operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
   urlDatabase[id] = req.body.longURL;
-  res.redirect('/urls/'); 
+  res.redirect('/urls'); 
 });
 
 //clear the cookie after receiving a logout commend
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls/'); 
+  res.redirect('/login'); 
 });
 
 app.listen(PORT, () => {
