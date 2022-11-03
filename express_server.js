@@ -22,7 +22,6 @@ app.use(cookieSession({
 ///////////////////////////////
 
 const urlDatabase = {};
-
 const users = {};
 
 //function to create a random 6-digit-character short URL name 
@@ -37,10 +36,10 @@ const generateRandomString = () => {
 };
 
 // function to finding a user object from its email
-const getUserByEmail = (email) => {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
+const getUserByEmail = function(email, database) {
+  for (const key in database) {
+    if (database[key].email === email) {
+      return database[key];
     } 
   }
   return null;
@@ -108,7 +107,7 @@ app.post("/register", (req, res) => {
     res.status(400).send('email is invalid');
   } else if (req.body.password === '') {
     res.status(400).send('password is invalid');
-  } else if (getUserByEmail(req.body.email)) {
+  } else if (getUserByEmail(req.body.email, users)) {
     res.status(400).send('account already registered');
   } else {
     const userId = generateRandomString();
@@ -137,7 +136,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const userObject = getUserByEmail(req.body.email);
+  const userObject = getUserByEmail(req.body.email, users);
   if (!userObject) {
     res.status(403).send('e-mail cannot be found');
   } else {
