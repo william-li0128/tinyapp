@@ -2,6 +2,9 @@ const express = require("express");
 const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 
+// require all helper functions from the module
+const { getUserByEmail } = require("./helpers");
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -33,16 +36,6 @@ const generateRandomString = () => {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
-};
-
-// function to finding a user object from its email
-const getUserByEmail = function(email, database) {
-  for (const key in database) {
-    if (database[key].email === email) {
-      return database[key];
-    } 
-  }
-  return null;
 };
 
 // function to check whether a shortened url exists
