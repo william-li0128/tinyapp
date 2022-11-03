@@ -3,7 +3,7 @@ const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 
 // require all helper functions from the module
-const { getUserByEmail } = require("./helpers");
+const { getUserByEmail, generateRandomString, checkShortenedURL } = require("./helpers");
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -27,26 +27,7 @@ app.use(cookieSession({
 const urlDatabase = {};
 const users = {};
 
-//function to create a random 6-digit-character short URL name 
-const generateRandomString = () => {
-  let result             = '';
-  const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for ( let i = 0; i < 6; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
 
-// function to check whether a shortened url exists
-const checkShortenedURL = (shortenedURL) => {
-  for (const key in urlDatabase) {
-    if (shortenedURL === key) {
-      return true;
-    } 
-  }
-  return false;
-};
 
 /* returns the URLs where the userID is equal 
 to the id of the currently logged-in user. */
@@ -110,7 +91,6 @@ app.post("/register", (req, res) => {
       password: bcrypt.hashSync(req.body.password, 10)
     }
     // hash password with bcrypt when storing
-    console.log(users);
     res.redirect('/login'); 
   }
 });
@@ -153,6 +133,7 @@ app.post("/urls", (req, res) => {
       longURL: req.body.longURL,
       userId: req.session.user_id
     };
+    console.log(urlDatabase);
     res.redirect(`/urls/${shortURL}`); 
   }
 });
@@ -161,7 +142,7 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   if (!req.session.user_id) {
     res.status(403).send('Please login before viewing the shorten url page.');
-  } else if (!checkShortenedURL(id)) {
+  } else if (!checkShortenedURL(id, urlDatabase)) {
     res.status(403).send('Invalid shorten url');
   } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
@@ -182,7 +163,7 @@ app.get("/hello", (req, res) => {
 //redirect the shortURL to the appropriate longURL
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id
-  if (checkShortenedURL(shortURL)) {
+  if (checkShortenedURL(shortURL, users)) {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   }else {
@@ -195,7 +176,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   if (!req.session.user_id) {
     res.status(403).send('Please login before deleting the shorten url page.');
-  } else if (!checkShortenedURL(id)) {
+  } else if (!checkShortenedURL(id, urlDatabase)) {
     res.status(403).send('Invalid shorten url');
   } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
@@ -210,7 +191,7 @@ app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
   if (!req.session.user_id) {
     res.status(403).send('Please login before editing the shorten url page.');
-  } else if (!checkShortenedURL(id)) {
+  } else if (!checkShortenedURL(id, urlDatabase)) {
     res.status(403).send('Invalid shorten url');
   } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
