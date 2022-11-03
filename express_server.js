@@ -1,13 +1,21 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = 8080; // default port 8080
 
+///////////////////////
+// server middleware //
+///////////////////////
+
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'user_id',
+  secret: 'alohomora',
+}))
+// set the secret string as the Unlocking Charm in Harry Potter
 
 ////////////////////////////////
 // setup all database objects //
@@ -65,19 +73,19 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.status(403).send('Please login before viewing URLs.');
   } else {
-    const templateVars = { urls: urlsForUser(req.cookies["user_id"]) , user: users[req.cookies["user_id"]] };
+    const templateVars = { urls: urlsForUser(req.session.user_id) , user: users[req.session.user_id] };
     res.render("urls_index", templateVars);
   }
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.redirect('/login');
   } else {
-    const templateVars = { user: users[req.cookies["user_id"]] };
+    const templateVars = { user: users[req.session.user_id] };
     res.render("urls_new", templateVars);
   }
 });
@@ -87,10 +95,10 @@ app.get("/urls/new", (req, res) => {
 ///////////////////////////////
 
 app.get("/register", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-    const templateVars = { user: users[req.cookies["user_id"]] };
+    const templateVars = { user: users[req.session.user_id] };
     res.render("register", templateVars);
   }
 });
@@ -120,10 +128,10 @@ app.post("/register", (req, res) => {
 ///////////////////////////
 
 app.get("/login", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-    const templateVars = { user: users[req.cookies["user_id"]] };
+    const templateVars = { user: users[req.session.user_id] };
     res.render("login", templateVars);
   }
 });
@@ -134,23 +142,24 @@ app.post("/login", (req, res) => {
     res.status(403).send('e-mail cannot be found');
   } else {
     if (!bcrypt.compareSync(req.body.password, userObject.password)){
-      //use bcrypt to compare hashed password with the new input
+      // use bcrypt to compare hashed password with the new input
       res.status(403).send('password does not match');
     } else {
-      res.cookie('user_id', userObject.id);
+      req.session.user_id = userObject.id
+      // use cookie-session to setup the user_id cookie
       res.redirect('/urls'); 
     }
   }
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.status(403).send('Please login before using the tiny APP.');
   } else {
     const shortURL = generateRandomString();
     urlDatabase[shortURL] = {
       longURL: req.body.longURL,
-      userId: req.cookies["user_id"]
+      userId: req.session.user_id
     };
     res.redirect(`/urls/${shortURL}`); 
   }
@@ -158,14 +167,14 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.status(403).send('Please login before viewing the shorten url page.');
   } else if (!checkShortenedURL(id)) {
     res.status(403).send('Invalid shorten url');
-  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+  } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
-    const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: users[req.cookies["user_id"]]};
+    const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: users[req.session.user_id]};
     res.render("urls_show", templateVars);
   }
 });
@@ -192,11 +201,11 @@ app.get("/u/:id", (req, res) => {
 //implement a DELETE operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.status(403).send('Please login before deleting the shorten url page.');
   } else if (!checkShortenedURL(id)) {
     res.status(403).send('Invalid shorten url');
-  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+  } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
     delete urlDatabase[id];
@@ -207,11 +216,11 @@ app.post("/urls/:id/delete", (req, res) => {
 //implement an EDIT operation and redirect to the urls_index page afterwards
 app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.status(403).send('Please login before editing the shorten url page.');
   } else if (!checkShortenedURL(id)) {
     res.status(403).send('Invalid shorten url');
-  } else if (req.cookies["user_id"] !== urlDatabase[id].userId) {
+  } else if (req.session.user_id !== urlDatabase[id].userId) {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
     urlDatabase[id].longURL = req.body.longURL;
