@@ -1,9 +1,9 @@
 const express = require("express");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 
 // require all helper functions from the module
-const { getUserByEmail, generateRandomString, checkShortenedURL } = require("./helpers");
+const { getUserByEmail, generateRandomString, checkShortenedURL, urlsForUser } = require("./helpers");
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'user_id',
   secret: 'alohomora',
-}))
+}));
 // set the secret string as the Unlocking Charm in Harry Potter
 
 ////////////////////////////////
@@ -28,19 +28,6 @@ const urlDatabase = {};
 const users = {};
 
 
-
-/* returns the URLs where the userID is equal 
-to the id of the currently logged-in user. */
-const urlsForUser = (id) => {
-  const userUrlDatabase = {};
-  for (const key in urlDatabase) {
-    if (id === urlDatabase[key].userId) {
-      userUrlDatabase[key] = urlDatabase[key];
-    } 
-  }
-  return userUrlDatabase;
-}
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -49,7 +36,7 @@ app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
     res.status(403).send('Please login before viewing URLs.');
   } else {
-    const templateVars = { urls: urlsForUser(req.session.user_id) , user: users[req.session.user_id] };
+    const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase) , user: users[req.session.user_id] };
     res.render("urls_index", templateVars);
   }
 });
@@ -89,9 +76,9 @@ app.post("/register", (req, res) => {
       id:       userId,
       email:    req.body.email,
       password: bcrypt.hashSync(req.body.password, 10)
-    }
+    };
     // hash password with bcrypt when storing
-    res.redirect('/login'); 
+    res.redirect('/login');
   }
 });
 
@@ -113,13 +100,13 @@ app.post("/login", (req, res) => {
   if (!userObject) {
     res.status(403).send('e-mail cannot be found');
   } else {
-    if (!bcrypt.compareSync(req.body.password, userObject.password)){
+    if (!bcrypt.compareSync(req.body.password, userObject.password)) {
       // use bcrypt to compare hashed password with the new input
       res.status(403).send('password does not match');
     } else {
-      req.session.user_id = userObject.id
+      req.session.user_id = userObject.id;
       // use cookie-session to setup the user_id cookie
-      res.redirect('/urls'); 
+      res.redirect('/urls');
     }
   }
 });
@@ -134,7 +121,7 @@ app.post("/urls", (req, res) => {
       userId: req.session.user_id
     };
     console.log(urlDatabase);
-    res.redirect(`/urls/${shortURL}`); 
+    res.redirect(`/urls/${shortURL}`);
   }
 });
 
@@ -162,11 +149,11 @@ app.get("/hello", (req, res) => {
 
 //redirect the shortURL to the appropriate longURL
 app.get("/u/:id", (req, res) => {
-  const shortURL = req.params.id
+  const shortURL = req.params.id;
   if (checkShortenedURL(shortURL, users)) {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
-  }else {
+  } else {
     res.status(403).send('Invalid shortened URL');
   }
 });
@@ -182,7 +169,7 @@ app.post("/urls/:id/delete", (req, res) => {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
     delete urlDatabase[id];
-    res.redirect('/urls'); 
+    res.redirect('/urls');
   }
 });
 
@@ -197,14 +184,14 @@ app.post("/urls/:id/edit", (req, res) => {
     res.status(403).send('Sorry! You don\' own this url.');
   } else {
     urlDatabase[id].longURL = req.body.longURL;
-    res.redirect('/urls'); 
+    res.redirect('/urls');
   }
 });
 
 //clear the cookie after receiving a logout commend
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/login'); 
+  res.redirect('/login');
 });
 
 app.listen(PORT, () => {
