@@ -29,7 +29,12 @@ const users = {};
 
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (!req.session.user_id) {
+    res.redirect('/login');
+  } else {
+    const templateVars = { user: users[req.session.user_id] };
+    res.redirect("urls");
+  }
 });
 
 app.get("/urls", (req, res) => {
@@ -78,7 +83,10 @@ app.post("/register", (req, res) => {
       password: bcrypt.hashSync(req.body.password, 10)
     };
     // hash password with bcrypt when storing
-    res.redirect('/login');
+    req.session.user_id = users[userId].id;
+    // use cookie-session to setup the user_id cookie
+    res.redirect('/urls');
+    // redirect user to /urls
   }
 });
 
@@ -150,7 +158,7 @@ app.get("/hello", (req, res) => {
 //redirect the shortURL to the appropriate longURL
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
-  if (checkShortenedURL(shortURL, users)) {
+  if (checkShortenedURL(shortURL, urlDatabase)) {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   } else {
